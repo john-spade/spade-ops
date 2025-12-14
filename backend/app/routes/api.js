@@ -22,18 +22,17 @@ export default (router) => {
 
     // Chart data - historical growth
     router.get('/dashboard/chart', async (ctx) => {
-        // Get monthly counts for the last 6 months
+        // Get monthly counts for the last 6 months from current date
         const months = [];
         const now = new Date();
 
         for (let i = 5; i >= 0; i--) {
-            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            const monthLabel = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-            const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+            const date = new Date(now.getFullYear(), now.getMonth() - i, 15);
+            const monthLabel = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
 
             months.push({
-                label: monthLabel,
-                date: endOfMonth.toISOString().split('T')[0]
+                label: monthLabel, // e.g., "Jul 24", "Aug 24", ..., "Dec 24"
+                date: date
             });
         }
 
@@ -46,7 +45,7 @@ export default (router) => {
         const baseClients = clientCount?.count || 0;
         const baseSites = siteCount?.count || 0;
 
-        // Generate realistic growth data (current counts with slight variations)
+        // Generate realistic growth data (current counts with slight variations going back)
         const labels = months.map(m => m.label);
         const guardsData = months.map((_, i) => Math.max(0, baseGuards - (5 - i) * Math.floor(baseGuards * 0.05)));
         const clientsData = months.map((_, i) => Math.max(0, baseClients - (5 - i) * Math.floor(baseClients * 0.03)));

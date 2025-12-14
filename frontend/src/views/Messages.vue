@@ -39,11 +39,23 @@ const searchQuery = ref('');
 const messagesContainer = ref<HTMLElement | null>(null);
 
 const currentUserId = computed(() => authStore.user?.id || 0);
+const currentUserRole = computed(() => authStore.user?.role || 'employee');
+const isAdmin = computed(() => currentUserRole.value === 'admin');
+
+// Filter users based on role - non-admins can only message admins
+const availableUsers = computed(() => {
+    if (isAdmin.value) {
+        // Admins can message everyone
+        return users.value.filter(u => u.id !== currentUserId.value);
+    } else {
+        // Non-admins can only message admins
+        return users.value.filter(u => u.id !== currentUserId.value && u.role === 'admin');
+    }
+});
 
 const filteredUsers = computed(() => {
-    if (!searchQuery.value) return users.value.filter(u => u.id !== currentUserId.value);
-    return users.value.filter(u => 
-        u.id !== currentUserId.value &&
+    if (!searchQuery.value) return availableUsers.value;
+    return availableUsers.value.filter(u => 
         (u.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
          u.email.toLowerCase().includes(searchQuery.value.toLowerCase()))
     );
