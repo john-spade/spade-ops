@@ -43,15 +43,15 @@ export const useAuthStore = defineStore('auth', () => {
 
         try {
             const response = await api.post('/login', { identifier: username, password });
-            const { user: userData, access_token } = response.data;
-            const userWithToken = { ...userData, token: access_token };
+            const { user: userData, token } = response.data.data;
+            const userWithToken = { ...userData, token };
 
             user.value = userWithToken;
             sessionStorage.setItem('user', JSON.stringify(userWithToken));
 
             let redirect = '/dashboard';
-            if (userData.role === 'client') redirect = '/client';
-            if (userData.role === 'employee' || userData.role === 'guard' || userData.role === 'supervisor') redirect = '/employee';
+            if (userData.role === 'client') redirect = '/clients';
+            if (userData.role === 'employee' || userData.role === 'guard' || userData.role === 'supervisor') redirect = '/dashboard';
 
             return { success: true, redirect };
         } catch (error: any) {

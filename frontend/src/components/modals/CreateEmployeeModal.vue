@@ -14,7 +14,9 @@ const loading = ref(false);
 const form = ref({
     first_name: '',
     last_name: '',
+    employee_id: '',
     email: '',
+    password: '',
     phone: '',
     position: '',
     department: '',
@@ -32,7 +34,9 @@ const handleSubmit = async () => {
         form.value = {
             first_name: '',
             last_name: '',
+            employee_id: '',
             email: '',
+            password: '',
             phone: '',
             position: '',
             department: '',
@@ -69,6 +73,17 @@ const handleSubmit = async () => {
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-gray-400">Last Name</label>
                         <input v-model="form.last_name" type="text" required class="w-full px-4 py-2 bg-dark-900 border border-white/10 rounded-lg text-white focus:border-gold-500 outline-none" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-400">Employee ID</label>
+                        <input v-model="form.employee_id" type="text" placeholder="e.g. EMP001" class="w-full px-4 py-2 bg-dark-900 border border-white/10 rounded-lg text-white focus:border-gold-500 outline-none" />
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-400">Password</label>
+                        <input v-model="form.password" type="password" placeholder="Login password" class="w-full px-4 py-2 bg-dark-900 border border-white/10 rounded-lg text-white focus:border-gold-500 outline-none" />
                     </div>
                 </div>
 

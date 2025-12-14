@@ -12,14 +12,17 @@ import {
     LogOut,
     Sun,
     Moon,
-    Users2
+    Users2,
+    Calendar,
+    Wallet
 } from 'lucide-vue-next';
 
 interface NavItem {
     label: string;
     href: string;
     icon: any;
-    children?: { label: string; href: string }[];
+    roles?: string[];
+    children?: { label: string; href: string; roles?: string[] }[];
 }
 
 const route = useRoute();
@@ -27,12 +30,19 @@ const authStore = useAuthStore();
 const isDark = ref(true);
 const expanded = ref<string | null>('HRMS');
 
-const adminNav: NavItem[] = [
-    { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+// Full navigation - roles determine visibility
+const allNavItems: NavItem[] = [
+    { 
+        label: 'Dashboard', 
+        href: '/dashboard', 
+        icon: LayoutDashboard,
+        roles: ['admin', 'supervisor', 'employee', 'client']
+    },
     {
         label: 'HRMS',
         href: '/hrms',
         icon: Users,
+        roles: ['admin', 'supervisor'],
         children: [
             { label: 'Employees', href: '/employees' },
             { label: 'Applicants', href: '/hrms/applicants' },
@@ -43,25 +53,65 @@ const adminNav: NavItem[] = [
         ]
     },
     {
+        label: 'My DTR',
+        href: '/hrms/attendance',
+        icon: Calendar,
+        roles: ['employee']
+    },
+    {
+        label: 'My Payroll',
+        href: '/hrms/payroll',
+        icon: Wallet,
+        roles: ['employee']
+    },
+    {
         label: 'Evaluation',
         href: '/evaluation',
         icon: ClipboardCheck,
+        roles: ['admin', 'supervisor', 'client'],
         children: [
-            { label: 'History', href: '/evaluation' },
-            { label: 'New Evaluation', href: '/evaluation/new' },
+            { label: 'History', href: '/evaluation', roles: ['admin', 'supervisor', 'client'] },
+            { label: 'New Evaluation', href: '/evaluation/new', roles: ['supervisor'] },
         ]
     },
     {
         label: 'Clients',
         href: '/clients',
         icon: Building2,
+        roles: ['admin', 'supervisor'],
         children: [
             { label: 'All Clients', href: '/clients' },
         ]
     },
-    { label: 'Partners', href: '/partners', icon: Users2 },
-    { label: 'Settings', href: '/settings', icon: Settings },
+    {
+        label: 'My Contract',
+        href: '/clients',
+        icon: Building2,
+        roles: ['client']
+    },
+    { label: 'Partners', href: '/partners', icon: Users2, roles: ['admin'] },
+    { label: 'Settings', href: '/settings', icon: Settings, roles: ['admin'] },
 ];
+
+// Filter nav by role
+const navItems = computed(() => {
+    const userRole = authStore.user?.role || 'admin';
+    return allNavItems.filter(item => {
+        if (!item.roles) return true;
+        return item.roles.includes(userRole);
+    }).map(item => {
+        if (item.children) {
+            return {
+                ...item,
+                children: item.children.filter(child => {
+                    if (!child.roles) return true;
+                    return child.roles.includes(userRole);
+                })
+            };
+        }
+        return item;
+    });
+});
 
 const isActive = (href: string) => route.path === href || route.path.startsWith(href + '/');
 
@@ -93,7 +143,7 @@ const toggleTheme = () => {
         <!-- Navigation -->
         <nav class="flex-1 p-4 overflow-y-auto">
             <ul class="space-y-1">
-                <li v-for="item in adminNav" :key="item.label">
+                <li v-for="item in navItems" :key="item.label">
                     <div v-if="item.children">
                         <button
                             @click="toggleExpand(item.label)"

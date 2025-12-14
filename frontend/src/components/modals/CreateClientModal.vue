@@ -15,6 +15,7 @@ const form = ref({
     name: '',
     contact_person: '',
     email: '',
+    password: '',
     phone: '',
     address: '',
     contract_start: new Date().toISOString().split('T')[0],
@@ -33,6 +34,7 @@ const handleSubmit = async () => {
             name: '',
             contact_person: '',
             email: '',
+            password: '',
             phone: '',
             address: '',
             contract_start: new Date().toISOString().split('T')[0],
@@ -70,23 +72,28 @@ const handleSubmit = async () => {
                         <input v-model="form.contact_person" type="text" class="w-full px-4 py-2 bg-dark-900 border border-white/10 rounded-lg text-white focus:border-gold-500 outline-none" />
                     </div>
                     <div class="space-y-2">
-                        <label class="text-sm font-medium text-gray-400">Email</label>
-                        <input v-model="form.email" type="email" class="w-full px-4 py-2 bg-dark-900 border border-white/10 rounded-lg text-white focus:border-gold-500 outline-none" />
+                        <label class="text-sm font-medium text-gray-400">Phone</label>
+                        <input v-model="form.phone" type="tel" class="w-full px-4 py-2 bg-dark-900 border border-white/10 rounded-lg text-white focus:border-gold-500 outline-none" />
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-6">
                     <div class="space-y-2">
-                        <label class="text-sm font-medium text-gray-400">Phone</label>
-                        <input v-model="form.phone" type="tel" class="w-full px-4 py-2 bg-dark-900 border border-white/10 rounded-lg text-white focus:border-gold-500 outline-none" />
+                        <label class="text-sm font-medium text-gray-400">Email (for login)</label>
+                        <input v-model="form.email" type="email" class="w-full px-4 py-2 bg-dark-900 border border-white/10 rounded-lg text-white focus:border-gold-500 outline-none" />
                     </div>
                     <div class="space-y-2">
-                        <label class="text-sm font-medium text-gray-400">Status</label>
-                        <select v-model="form.status" class="w-full px-4 py-2 bg-dark-900 border border-white/10 rounded-lg text-white focus:border-gold-500 outline-none">
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
+                        <label class="text-sm font-medium text-gray-400">Password</label>
+                        <input v-model="form.password" type="password" placeholder="Portal login password" class="w-full px-4 py-2 bg-dark-900 border border-white/10 rounded-lg text-white focus:border-gold-500 outline-none" />
                     </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-gray-400">Status</label>
+                    <select v-model="form.status" class="w-full px-4 py-2 bg-dark-900 border border-white/10 rounded-lg text-white focus:border-gold-500 outline-none">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
                 </div>
 
                 <div class="space-y-2">

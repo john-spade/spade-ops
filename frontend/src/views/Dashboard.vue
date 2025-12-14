@@ -14,13 +14,17 @@ interface DashboardStats {
     totalEvaluations: number;
     activeClients: number;
     pendingActions: number;
+    sites: number;
+    attendanceToday: number;
 }
 
 const stats = ref<DashboardStats>({
     totalEmployees: 0,
     totalEvaluations: 0,
     activeClients: 0,
-    pendingActions: 3 // Mocked as per screenshot "3 urgent"
+    pendingActions: 0,
+    sites: 0,
+    attendanceToday: 0
 });
 
 const announcements = ref<any[]>([]);
@@ -93,18 +97,19 @@ const chartOptions = {
 
 onMounted(async () => {
     try {
-        const [empRes, evalRes, clientRes, annRes] = await Promise.all([
-            api.get('/employees?per_page=1'),
-            api.get('/evaluations?per_page=1'),
-            api.get('/clients?per_page=1'),
+        const [statsRes, annRes] = await Promise.all([
+            api.get('/dashboard/stats'),
             api.get('/announcements')
         ]);
 
+        const data = statsRes.data.data || statsRes.data;
         stats.value = {
-            totalEmployees: empRes.data.data?.total || empRes.data.total || 0,
-            totalEvaluations: evalRes.data.data?.total || evalRes.data.total || 0,
-            activeClients: clientRes.data.data?.total || clientRes.data.total || 0,
-            pendingActions: 3 // Mocked
+            totalEmployees: data.employees || 0,
+            totalEvaluations: data.evaluations || 0,
+            activeClients: data.clients || 0,
+            pendingActions: data.scheduledShifts || 0,
+            sites: data.sites || 0,
+            attendanceToday: data.attendanceToday || 0
         };
 
         announcements.value = annRes.data.data?.data || annRes.data.data || [];
@@ -161,7 +166,7 @@ onMounted(async () => {
                         <div>
                             <p class="text-gray-500 text-sm">Active Clients</p>
                             <p class="text-3xl font-bold text-white mt-1 group-hover:text-green-400 transition-colors">{{ stats.activeClients }}</p>
-                            <p class="text-gray-500 text-xs mt-2">-- sites covered</p>
+                            <p class="text-gray-500 text-xs mt-2">{{ stats.sites }} sites covered</p>
                         </div>
                         <div class="p-3 bg-green-500/10 rounded-lg group-hover:bg-green-500/20 transition-colors">
                             <Building2 class="w-6 h-6 text-green-500" />
@@ -175,7 +180,7 @@ onMounted(async () => {
                     <div>
                         <p class="text-gray-500 text-sm">Pending Actions</p>
                         <p class="text-3xl font-bold text-white mt-1 group-hover:text-orange-400 transition-colors">{{ stats.pendingActions }}</p>
-                        <p class="text-orange-400 text-xs mt-2">3 urgent</p>
+                        <p class="text-orange-400 text-xs mt-2">{{ stats.pendingActions > 0 ? 'pending shifts' : 'all clear' }}</p>
                     </div>
                     <div class="p-3 bg-orange-500/10 rounded-lg group-hover:bg-orange-500/20 transition-colors">
                         <AlertTriangle class="w-6 h-6 text-orange-500" />

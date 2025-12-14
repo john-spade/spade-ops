@@ -21,19 +21,19 @@ import Partners from '@/views/Partners.vue';
 const routes = [
     { path: '/', name: 'SignIn', component: SignIn },
     { path: '/dashboard', name: 'Dashboard', component: Dashboard, meta: { requiresAuth: true } },
-    { path: '/employees', name: 'Employees', component: Employees, meta: { requiresAuth: true } },
-    { path: '/employees/:id', name: 'EmployeeDetail', component: EmployeeDetail, meta: { requiresAuth: true } },
-    { path: '/hrms/applicants', name: 'Applicants', component: Applicants, meta: { requiresAuth: true } },
-    { path: '/hrms/attendance', name: 'Attendance', component: Attendance, meta: { requiresAuth: true } },
-    { path: '/hrms/shifts', name: 'Shifts', component: Shifts, meta: { requiresAuth: true } },
-    { path: '/hrms/sites', name: 'Sites', component: Sites, meta: { requiresAuth: true } },
-    { path: '/hrms/payroll', name: 'Payroll', component: Payroll, meta: { requiresAuth: true } },
-    { path: '/clients', name: 'Clients', component: Clients, meta: { requiresAuth: true } },
-    { path: '/clients/:id', name: 'ClientDetail', component: ClientDetail, meta: { requiresAuth: true } },
-    { path: '/evaluation/new', name: 'NewEvaluation', component: NewEvaluation, meta: { requiresAuth: true } },
-    { path: '/evaluation', name: 'EvaluationHistory', component: EvaluationHistory, meta: { requiresAuth: true } },
-    { path: '/partners', name: 'Partners', component: Partners, meta: { requiresAuth: true } },
-    { path: '/settings', name: 'Settings', component: Settings, meta: { requiresAuth: true } },
+    { path: '/employees', name: 'Employees', component: Employees, meta: { requiresAuth: true, roles: ['admin', 'supervisor'] } },
+    { path: '/employees/:id', name: 'EmployeeDetail', component: EmployeeDetail, meta: { requiresAuth: true, roles: ['admin', 'supervisor'] } },
+    { path: '/hrms/applicants', name: 'Applicants', component: Applicants, meta: { requiresAuth: true, roles: ['admin', 'supervisor'] } },
+    { path: '/hrms/attendance', name: 'Attendance', component: Attendance, meta: { requiresAuth: true, roles: ['admin', 'supervisor', 'employee'] } },
+    { path: '/hrms/shifts', name: 'Shifts', component: Shifts, meta: { requiresAuth: true, roles: ['admin', 'supervisor'] } },
+    { path: '/hrms/sites', name: 'Sites', component: Sites, meta: { requiresAuth: true, roles: ['admin', 'supervisor'] } },
+    { path: '/hrms/payroll', name: 'Payroll', component: Payroll, meta: { requiresAuth: true, roles: ['admin', 'supervisor', 'employee'] } },
+    { path: '/clients', name: 'Clients', component: Clients, meta: { requiresAuth: true, roles: ['admin', 'supervisor', 'client'] } },
+    { path: '/clients/:id', name: 'ClientDetail', component: ClientDetail, meta: { requiresAuth: true, roles: ['admin', 'supervisor', 'client'] } },
+    { path: '/evaluation/new', name: 'NewEvaluation', component: NewEvaluation, meta: { requiresAuth: true, roles: ['supervisor'] } },
+    { path: '/evaluation', name: 'EvaluationHistory', component: EvaluationHistory, meta: { requiresAuth: true, roles: ['admin', 'supervisor', 'client'] } },
+    { path: '/partners', name: 'Partners', component: Partners, meta: { requiresAuth: true, roles: ['admin'] } },
+    { path: '/settings', name: 'Settings', component: Settings, meta: { requiresAuth: true, roles: ['admin'] } },
 ];
 
 const router = createRouter({
@@ -41,15 +41,29 @@ const router = createRouter({
     routes,
 });
 
-// Navigation guard
+// Navigation guard with role checking
 router.beforeEach((to, _from, next) => {
     const authStore = useAuthStore();
 
+    // Not authenticated - redirect to login
     if (to.meta.requiresAuth && !authStore.isAuthenticated) {
         next('/');
-    } else {
-        next();
+        return;
     }
+
+    // Check role permissions
+    const allowedRoles = to.meta.roles as string[] | undefined;
+    if (allowedRoles && authStore.user) {
+        const userRole = authStore.user.role;
+        if (!allowedRoles.includes(userRole)) {
+            // User doesn't have permission - redirect to dashboard
+            next('/dashboard');
+            return;
+        }
+    }
+
+    next();
 });
 
 export default router;
+
