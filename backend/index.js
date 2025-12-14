@@ -6,7 +6,14 @@ import authRoutes from './app/routes/auth.js';
 const app = new Callie();
 
 // Global middleware
-app.use(cors());
+app.use(cors({
+    origin: [
+        'https://admin.spadesecurityservices.com',
+        'http://localhost:5173',
+        'http://localhost:3000'
+    ],
+    credentials: true
+}));
 app.use(secureHeaders());
 
 // Routes
