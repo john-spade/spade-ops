@@ -62,6 +62,14 @@ const getStatusClass = (status: string) => {
 const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 };
+
+// Current payroll period (1st-15th or 16th-end of month)
+const payrollPeriod = (() => {
+    const now = new Date();
+    const day = now.getDate();
+    const month = now.toLocaleDateString('en-US', { month: 'short' });
+    return day <= 15 ? `${month} 1-15` : `${month} 16-${new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()}`;
+})();
 </script>
 
 <template>
@@ -74,7 +82,7 @@ const formatCurrency = (val: number) => {
             <div class="flex gap-3">
                  <Button variant="outline" class="gap-2">
                     <Calendar class="w-4 h-4" />
-                    Oct 1-15
+                    {{ payrollPeriod }}
                 </Button>
                 <Button variant="primary" class="gap-2">
                     <DollarSign class="w-4 h-4" />

@@ -81,6 +81,9 @@ const getStatusClass = (status: string) => {
         default: return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
     }
 };
+
+// Current date for display
+const currentDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 </script>
 
 <template>
@@ -93,7 +96,7 @@ const getStatusClass = (status: string) => {
             <div class="flex gap-3">
                  <Button variant="outline" class="gap-2">
                     <Calendar class="w-4 h-4" />
-                    Oct 27
+                    {{ currentDate }}
                 </Button>
                 <Button variant="primary" class="gap-2" @click="showModal = true">
                     <Clock class="w-4 h-4" />

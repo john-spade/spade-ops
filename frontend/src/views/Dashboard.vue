@@ -127,7 +127,7 @@ onMounted(async () => {
 
         // Update chart with real data
         const chart = chartRes.data.data;
-        if (chart && chart.labels) {
+        if (chart && chart.labels && chartData.datasets[0] && chartData.datasets[1] && chartData.datasets[2]) {
             chartData.labels = chart.labels;
             chartData.datasets[0].data = chart.guardsData;
             chartData.datasets[1].data = chart.clientsData;

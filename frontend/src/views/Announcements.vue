@@ -163,7 +163,7 @@ onMounted(fetchAnnouncements);
             <Card 
                 v-for="ann in announcements" 
                 :key="ann.id" 
-                :class-name="['p-6', ann.priority === 'high' ? 'border-l-4 border-l-red-500' : '']"
+                :class-name="`p-6 ${ann.priority === 'high' ? 'border-l-4 border-l-red-500' : ''}`"
             >
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
