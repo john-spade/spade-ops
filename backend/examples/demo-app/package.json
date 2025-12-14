@@ -1,0 +1,17 @@
+{
+    "name": "callie-demo-app",
+    "version": "1.0.0",
+    "description": "Demo application for callie.js",
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+        "dev": "npx nodemon index.js",
+        "start": "node index.js"
+    },
+    "dependencies": {
+        "dotenv": "^16.3.1"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.2"
+    }
+}

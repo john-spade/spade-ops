@@ -1,0 +1,38 @@
+{
+  "name": "callie",
+  "version": "1.0.0",
+  "description": "The Lightweight JS Framework That Replaces Laravel for SMBs - MySQL-first, zero-config, production-ready",
+  "main": "src/index.js",
+  "bin": {
+    "callie": "./bin/callie.js"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/",
+    "lint": "eslint src/"
+  },
+  "keywords": [
+    "framework",
+    "backend",
+    "mysql",
+    "rest",
+    "api",
+    "laravel-alternative",
+    "lightweight",
+    "smb"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "mysql2": "^3.6.5",
+    "dotenv": "^16.3.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
