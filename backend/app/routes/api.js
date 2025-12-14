@@ -427,6 +427,53 @@ export default (router) => {
         ctx.success(null, 'Message marked as read');
     });
 
+    // Unread message count
+    router.get('/messages/unread-count', async (ctx) => {
+        if (!ctx.state.user) return ctx.error('Not authenticated', 401);
+
+        const [result] = await db.raw(
+            'SELECT COUNT(*) as count FROM messages WHERE recipient_id = ? AND is_read = FALSE',
+            [ctx.state.user.id]
+        );
+        ctx.success({ count: result?.count || 0 });
+    });
+
+    // ============ NOTIFICATIONS ============
+    router.get('/notifications', async (ctx) => {
+        if (!ctx.state.user) return ctx.error('Not authenticated', 401);
+
+        const notifications = await db.table('notifications')
+            .where({ user_id: ctx.state.user.id })
+            .orderBy('created_at', 'DESC')
+            .limit(20)
+            .get();
+        ctx.success(notifications || []);
+    });
+
+    router.get('/notifications/unread-count', async (ctx) => {
+        if (!ctx.state.user) return ctx.error('Not authenticated', 401);
+
+        const [result] = await db.raw(
+            'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = FALSE',
+            [ctx.state.user.id]
+        );
+        ctx.success({ count: result?.count || 0 });
+    });
+
+    router.put('/notifications/:id/read', async (ctx) => {
+        if (!ctx.state.user) return ctx.error('Not authenticated', 401);
+
+        await db.table('notifications').where({ id: ctx.params.id, user_id: ctx.state.user.id }).update({ is_read: true });
+        ctx.success(null, 'Notification marked as read');
+    });
+
+    router.put('/notifications/read-all', async (ctx) => {
+        if (!ctx.state.user) return ctx.error('Not authenticated', 401);
+
+        await db.table('notifications').where({ user_id: ctx.state.user.id }).update({ is_read: true });
+        ctx.success(null, 'All notifications marked as read');
+    });
+
     // ============ PARTNERS ============
     router.get('/partners', async (ctx) => {
         const partners = await db.table('partners')

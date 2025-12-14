@@ -110,3 +110,15 @@ CREATE TABLE IF NOT EXISTS messages (
   FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- Notifications Table
+CREATE TABLE IF NOT EXISTS notifications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  content TEXT,
+  type ENUM('info', 'success', 'warning', 'error') DEFAULT 'info',
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
