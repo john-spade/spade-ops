@@ -19,6 +19,7 @@ import Payroll from '@/views/hrms/Payroll.vue';
 import Partners from '@/views/Partners.vue';
 import Users from '@/views/Users.vue';
 import Messages from '@/views/Messages.vue';
+import Announcements from '@/views/Announcements.vue';
 
 const routes = [
     { path: '/', name: 'SignIn', component: SignIn },
@@ -38,6 +39,7 @@ const routes = [
     { path: '/settings', name: 'Settings', component: Settings, meta: { requiresAuth: true, roles: ['admin'] } },
     { path: '/users', name: 'Users', component: Users, meta: { requiresAuth: true, roles: ['admin'] } },
     { path: '/messages', name: 'Messages', component: Messages, meta: { requiresAuth: true } },
+    { path: '/announcements', name: 'Announcements', component: Announcements, meta: { requiresAuth: true } },
 ];
 
 const router = createRouter({

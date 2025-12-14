@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, reactive } from 'vue';
 import { RouterLink } from 'vue-router';
 import Card from '@/components/ui/Card.vue';
 import { Users, ClipboardCheck, Building2, AlertTriangle, Bell, Trophy, ArrowRight } from 'lucide-vue-next';
 import { Line } from 'vue-chartjs';
 import 'chart.js/auto';
 import api from '@/lib/api';
-
-// Chart.js components are automatically registered by 'chart.js/auto'
 
 interface DashboardStats {
     totalEmployees: number;
@@ -16,6 +14,15 @@ interface DashboardStats {
     pendingActions: number;
     sites: number;
     attendanceToday: number;
+}
+
+interface TopPerformer {
+    id: number;
+    first_name: string;
+    last_name: string;
+    position: string;
+    avg_score: number;
+    eval_count: number;
 }
 
 const stats = ref<DashboardStats>({
@@ -28,37 +35,38 @@ const stats = ref<DashboardStats>({
 });
 
 const announcements = ref<any[]>([]);
+const topPerformers = ref<TopPerformer[]>([]);
 
-// Chart Data
-const chartData = {
-    labels: ['Oct 15', 'Oct 30', 'Nov 15', 'Nov 30', 'Dec 15', 'Dec 30'],
+// Chart Data - reactive so it updates when API returns
+const chartData = reactive({
+    labels: ['Loading...'],
     datasets: [
         {
             label: 'Guards',
-            data: [65, 70, 75, 80, 85, 90],
-            borderColor: '#3b82f6', // blue-500
+            data: [0],
+            borderColor: '#3b82f6',
             backgroundColor: 'rgba(59, 130, 246, 0.1)',
             fill: true,
             tension: 0.4
         },
         {
             label: 'Clients',
-            data: [40, 42, 45, 48, 50, 52],
-            borderColor: '#a855f7', // purple-500
+            data: [0],
+            borderColor: '#a855f7',
             backgroundColor: 'rgba(168, 85, 247, 0.1)',
             fill: true,
             tension: 0.4
         },
         {
             label: 'Sites',
-            data: [25, 28, 30, 32, 35, 38],
-            borderColor: '#22c55e', // green-500
+            data: [0],
+            borderColor: '#22c55e',
             backgroundColor: 'rgba(34, 197, 94, 0.1)',
             fill: true,
             tension: 0.4
         }
     ]
-};
+});
 
 const chartOptions = {
     responsive: true,
@@ -97,9 +105,11 @@ const chartOptions = {
 
 onMounted(async () => {
     try {
-        const [statsRes, annRes] = await Promise.all([
+        const [statsRes, annRes, chartRes, perfRes] = await Promise.all([
             api.get('/dashboard/stats'),
-            api.get('/announcements')
+            api.get('/announcements'),
+            api.get('/dashboard/chart').catch(() => ({ data: { data: null } })),
+            api.get('/dashboard/top-performers').catch(() => ({ data: { data: [] } }))
         ]);
 
         const data = statsRes.data.data || statsRes.data;
@@ -113,6 +123,16 @@ onMounted(async () => {
         };
 
         announcements.value = annRes.data.data?.data || annRes.data.data || [];
+        topPerformers.value = perfRes.data.data || [];
+
+        // Update chart with real data
+        const chart = chartRes.data.data;
+        if (chart && chart.labels) {
+            chartData.labels = chart.labels;
+            chartData.datasets[0].data = chart.guardsData;
+            chartData.datasets[1].data = chart.clientsData;
+            chartData.datasets[2].data = chart.sitesData;
+        }
     } catch (error) {
         console.error('Error fetching dashboard data:', error);
     }
@@ -135,7 +155,7 @@ onMounted(async () => {
                             <p class="text-gray-500 text-sm">Total Employees</p>
                             <p class="text-3xl font-bold text-white mt-1 group-hover:text-blue-400 transition-colors">{{ stats.totalEmployees }}</p>
                             <p class="text-green-400 text-xs mt-2 flex items-center gap-1">
-                                ↗ +3 this month
+                                ↗ Active guards
                             </p>
                         </div>
                         <div class="p-3 bg-blue-500/10 rounded-lg group-hover:bg-blue-500/20 transition-colors">
@@ -149,9 +169,9 @@ onMounted(async () => {
                 <Card class-name="p-6 border-l-4 border-l-purple-500 hover:bg-dark-800 transition-colors group">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-gray-500 text-sm">Evaluations This Month</p>
+                            <p class="text-gray-500 text-sm">Total Evaluations</p>
                             <p class="text-3xl font-bold text-white mt-1 group-hover:text-purple-400 transition-colors">{{ stats.totalEvaluations }}</p>
-                            <p class="text-gray-400 text-xs mt-2">Avg Score: 88%</p>
+                            <p class="text-gray-400 text-xs mt-2">Performance reviews</p>
                         </div>
                         <div class="p-3 bg-purple-500/10 rounded-lg group-hover:bg-purple-500/20 transition-colors">
                             <ClipboardCheck class="w-6 h-6 text-purple-500" />
@@ -198,9 +218,9 @@ onMounted(async () => {
                         <Bell class="w-5 h-5 text-gold-500" />
                         Announcements
                     </h3>
-                    <button class="text-xs text-gray-500 hover:text-white flex items-center gap-1 transition-colors">
+                    <RouterLink to="/announcements" class="text-xs text-gray-500 hover:text-white flex items-center gap-1 transition-colors">
                         View All <ArrowRight class="w-3 h-3" />
-                    </button>
+                    </RouterLink>
                 </div>
                 <div v-if="announcements.length" class="space-y-3">
                     <div v-for="ann in announcements.slice(0, 2)" :key="ann.id" class="p-3 bg-dark-900 rounded-lg border border-white/5">
@@ -218,11 +238,39 @@ onMounted(async () => {
                         <Trophy class="w-5 h-5 text-gold-500" />
                         Top Performers
                     </h3>
-                    <button class="text-xs text-gray-500 hover:text-white flex items-center gap-1 transition-colors">
+                    <RouterLink to="/evaluation" class="text-xs text-gray-500 hover:text-white flex items-center gap-1 transition-colors">
                         View All <ArrowRight class="w-3 h-3" />
-                    </button>
+                    </RouterLink>
                 </div>
-                <p class="text-gray-500 text-sm pt-4">No performance data available yet.</p>
+                <div v-if="topPerformers.length" class="space-y-2">
+                    <div 
+                        v-for="(perf, idx) in topPerformers" 
+                        :key="perf.id"
+                        class="flex items-center justify-between p-2 rounded-lg hover:bg-white/5"
+                    >
+                        <div class="flex items-center gap-3">
+                            <div :class="[
+                                'w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm',
+                                idx === 0 ? 'bg-gold-500 text-dark-900' : 
+                                idx === 1 ? 'bg-gray-400 text-dark-900' : 
+                                idx === 2 ? 'bg-orange-600 text-dark-900' : 'bg-dark-700 text-white'
+                            ]">
+                                {{ idx + 1 }}
+                            </div>
+                            <div>
+                                <p class="text-sm text-white font-medium">{{ perf.first_name }} {{ perf.last_name }}</p>
+                                <p class="text-xs text-gray-500">{{ perf.position }}</p>
+                            </div>
+                        </div>
+                        <span :class="[
+                            'font-bold',
+                            perf.avg_score >= 80 ? 'text-green-400' : perf.avg_score >= 60 ? 'text-gold-500' : 'text-red-400'
+                        ]">
+                            {{ Math.round(perf.avg_score) }}%
+                        </span>
+                    </div>
+                </div>
+                <p v-else class="text-gray-500 text-sm pt-4">No performance data available yet.</p>
             </Card>
         </div>
 

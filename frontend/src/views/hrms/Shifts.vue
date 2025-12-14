@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import Card from '@/components/ui/Card.vue';
 import Button from '@/components/ui/Button.vue';
-import { Calendar, Clock, MapPin, Loader2 } from 'lucide-vue-next';
+import { Calendar, Clock, MapPin, Loader2, Shield, Users } from 'lucide-vue-next';
 import api from '@/lib/api';
 import CreateShiftModal from '@/components/modals/CreateShiftModal.vue';
 
@@ -15,7 +15,15 @@ interface Shift {
     status: string;
 }
 
+interface Guard {
+    id: number;
+    name: string;
+    position: string;
+    status: string;
+}
+
 const shifts = ref<Shift[]>([]);
+const securityGuards = ref<Guard[]>([]);
 const loading = ref(false);
 const showModal = ref(false);
 
@@ -28,8 +36,24 @@ const formatTimeRange = (start: string, end: string) => {
 const fetchShifts = async () => {
     loading.value = true;
     try {
-        const response = await api.get('/shifts');
-        const data = response.data.data;
+        const [shiftsRes, employeesRes] = await Promise.all([
+            api.get('/shifts'),
+            api.get('/employees')
+        ]);
+        
+        const employees = employeesRes.data.data || [];
+        
+        // Filter for security guards
+        securityGuards.value = employees
+            .filter((e: any) => e.position?.toLowerCase().includes('security') || e.position?.toLowerCase().includes('guard'))
+            .map((e: any) => ({
+                id: e.id,
+                name: `${e.first_name} ${e.last_name}`,
+                position: e.position,
+                status: e.status
+            }));
+        
+        const data = shiftsRes.data.data || [];
         shifts.value = data.map((s: any) => ({
             id: s.id,
             employee: s.employee ? `${s.employee.first_name} ${s.employee.last_name}` : 'Unknown',
@@ -44,6 +68,8 @@ const fetchShifts = async () => {
         loading.value = false;
     }
 };
+
+const activeGuards = computed(() => securityGuards.value.filter(g => g.status === 'active'));
 
 onMounted(fetchShifts);
 
@@ -77,6 +103,36 @@ const getStatusClass = (status: string) => {
         </div>
 
         <CreateShiftModal :is-open="showModal" @close="showModal = false" @refresh="fetchShifts" />
+
+        <!-- Available Security Guards -->
+        <Card v-if="activeGuards.length > 0" class-name="p-5">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-3 bg-blue-500/10 rounded-lg">
+                        <Shield class="w-6 h-6 text-blue-500" />
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">Available Guards</h3>
+                        <p class="text-sm text-gray-500">{{ activeGuards.length }} guards can be assigned</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <div 
+                    v-for="guard in activeGuards.slice(0, 10)" 
+                    :key="guard.id"
+                    class="flex items-center gap-2 px-3 py-2 bg-dark-900 rounded-lg border border-white/10 hover:border-blue-500/30 cursor-pointer transition-colors"
+                >
+                    <div class="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500 text-xs font-bold">
+                        {{ guard.name.charAt(0) }}
+                    </div>
+                    <span class="text-sm text-white">{{ guard.name }}</span>
+                </div>
+                <div v-if="activeGuards.length > 10" class="flex items-center px-3 py-2 text-sm text-gray-500">
+                    +{{ activeGuards.length - 10 }} more
+                </div>
+            </div>
+        </Card>
 
         <Card class-name="overflow-hidden">
             <div v-if="loading" class="flex justify-center items-center py-12">
