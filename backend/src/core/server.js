@@ -89,12 +89,33 @@ export class Callie {
         const ctx = new Context(req, res);
 
         try {
+            // Run global middleware first (includes CORS)
+            // This ensures preflight requests get CORS headers
+            let middlewareIndex = 0;
+            let middlewareComplete = false;
+
+            const runNextMiddleware = async () => {
+                if (middlewareIndex >= this.globalMiddleware.length) {
+                    middlewareComplete = true;
+                    return;
+                }
+                const middleware = this.globalMiddleware[middlewareIndex++];
+                await middleware(ctx, runNextMiddleware);
+            };
+
+            await runNextMiddleware();
+
+            // If response was ended by middleware (e.g., CORS preflight), stop here
+            if (ctx.res.writableEnded) {
+                return;
+            }
+
             // Parse body for POST/PUT/PATCH
             if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
                 await ctx.parseBody();
             }
 
-            // Build middleware chain: global + route-specific
+            // Match route
             const route = this.router.match(req.method, ctx.path);
 
             if (!route) {
@@ -104,11 +125,8 @@ export class Callie {
             // Set route params
             ctx.params = route.params;
 
-            // Combine global middleware with route handlers
-            const handlers = [...this.globalMiddleware, ...route.handlers];
-
-            // Execute middleware chain
-            await this.executeChain(ctx, handlers);
+            // Execute route handlers
+            await this.executeChain(ctx, route.handlers);
 
         } catch (err) {
             await this.errorHandler(err, ctx);
