@@ -9,12 +9,12 @@ import {
     Building2,
     Settings,
     ChevronDown,
-    LogOut,
-    Sun,
-    Moon,
     Users2,
     Calendar,
-    Wallet
+    Wallet,
+    UserCog,
+    Sun,
+    Moon
 } from 'lucide-vue-next';
 
 interface NavItem {
@@ -30,8 +30,8 @@ const authStore = useAuthStore();
 const isDark = ref(true);
 const expanded = ref<string | null>('HRMS');
 
-// Full navigation - roles determine visibility
-const allNavItems: NavItem[] = [
+// Main navigation - roles determine visibility
+const mainNavItems: NavItem[] = [
     { 
         label: 'Dashboard', 
         href: '/dashboard', 
@@ -89,14 +89,14 @@ const allNavItems: NavItem[] = [
         icon: Building2,
         roles: ['client']
     },
+    { label: 'Users', href: '/users', icon: UserCog, roles: ['admin'] },
     { label: 'Partners', href: '/partners', icon: Users2, roles: ['admin'] },
-    { label: 'Settings', href: '/settings', icon: Settings, roles: ['admin'] },
 ];
 
 // Filter nav by role
 const navItems = computed(() => {
     const userRole = authStore.user?.role || 'admin';
-    return allNavItems.filter(item => {
+    return mainNavItems.filter(item => {
         if (!item.roles) return true;
         return item.roles.includes(userRole);
     }).map(item => {
@@ -174,35 +174,27 @@ const toggleTheme = () => {
             </ul>
         </nav>
 
-        <!-- User Profile -->
+        <!-- Bottom Section: Settings & Theme -->
         <div class="p-4 border-t border-white/10">
-            <div class="flex items-center gap-3 p-3 rounded-lg bg-dark-900/50">
-                <div class="w-10 h-10 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-500 font-bold">
-                    {{ authStore.user?.avatar || 'AD' }}
-                </div>
-                <div class="flex-1">
-                    <p class="text-sm font-medium text-white">{{ authStore.user?.name || 'Admin User' }}</p>
-                    <p class="text-xs text-gray-500 capitalize">{{ authStore.user?.role || 'Administrator' }}</p>
-                </div>
-            </div>
-
-            <div class="flex gap-2 mt-3">
-                <button
-                    @click="toggleTheme"
-                    class="flex-1 p-2 rounded-lg bg-dark-900 border border-white/10 text-gray-400 hover:text-gold-500 hover:border-gold-500/30 transition-colors flex items-center justify-center gap-2"
-                >
-                    <Sun v-if="isDark" class="w-4 h-4" />
-                    <Moon v-else class="w-4 h-4" />
-                    <span class="text-xs">{{ isDark ? 'Light' : 'Dark' }}</span>
-                </button>
-                <button
-                    @click="authStore.logout"
-                    class="flex-1 p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:border-red-500/30 transition-colors flex items-center justify-center gap-2"
-                >
-                    <LogOut class="w-4 h-4" />
-                    <span class="text-xs">Sign Out</span>
-                </button>
-            </div>
+            <!-- Settings (admin only) -->
+            <RouterLink 
+                v-if="authStore.user?.role === 'admin'"
+                to="/settings" 
+                :class="['sidebar-link mb-3', isActive('/settings') ? 'active' : '']"
+            >
+                <Settings class="w-5 h-5" />
+                Settings
+            </RouterLink>
+            
+            <!-- Theme Toggle -->
+            <button
+                @click="toggleTheme"
+                class="w-full p-3 rounded-lg bg-dark-900 border border-white/10 text-gray-400 hover:text-gold-500 hover:border-gold-500/30 transition-colors flex items-center justify-center gap-2"
+            >
+                <Sun v-if="isDark" class="w-4 h-4" />
+                <Moon v-else class="w-4 h-4" />
+                <span class="text-sm">{{ isDark ? 'Light Mode' : 'Dark Mode' }}</span>
+            </button>
         </div>
     </aside>
 </template>

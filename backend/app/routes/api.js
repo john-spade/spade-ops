@@ -348,4 +348,98 @@ export default (router) => {
 
         ctx.success(payroll);
     });
+
+    // ============ USERS ============
+    router.get('/users', async (ctx) => {
+        const users = await db.table('users')
+            .orderBy('created_at', 'DESC')
+            .get();
+        // Remove passwords from response
+        const safeUsers = users.map(u => ({ ...u, password: undefined }));
+        ctx.success(safeUsers);
+    });
+
+    router.delete('/users/:id', async (ctx) => {
+        const user = await db.table('users').find(ctx.params.id);
+        if (!user) return ctx.error('User not found', 404);
+
+        await db.table('users').where({ id: ctx.params.id }).delete();
+        ctx.success(null, 'User deleted');
+    });
+
+    // ============ MESSAGES ============
+    router.get('/messages/inbox', async (ctx) => {
+        if (!ctx.state.user) return ctx.error('Not authenticated', 401);
+
+        const messages = await db.raw(`
+            SELECT messages.*, users.name as sender_name, users.email as sender_email
+            FROM messages
+            JOIN users ON messages.sender_id = users.id
+            WHERE messages.recipient_id = ?
+            ORDER BY messages.created_at DESC
+        `, [ctx.state.user.id]) || [];
+
+        ctx.success(messages);
+    });
+
+    router.get('/messages/sent', async (ctx) => {
+        if (!ctx.state.user) return ctx.error('Not authenticated', 401);
+
+        const messages = await db.raw(`
+            SELECT messages.*, users.name as recipient_name, users.email as recipient_email
+            FROM messages
+            JOIN users ON messages.recipient_id = users.id
+            WHERE messages.sender_id = ?
+            ORDER BY messages.created_at DESC
+        `, [ctx.state.user.id]) || [];
+
+        ctx.success(messages);
+    });
+
+    router.post('/messages', async (ctx) => {
+        if (!ctx.state.user) return ctx.error('Not authenticated', 401);
+
+        const { recipient_id, subject, content } = ctx.body;
+        if (!recipient_id || !content) {
+            return ctx.error('Recipient and content are required', 400);
+        }
+
+        const id = await db.insert('messages', {
+            sender_id: ctx.state.user.id,
+            recipient_id,
+            subject: subject || '',
+            content
+        });
+
+        ctx.success({ id }, 'Message sent', 201);
+    });
+
+    router.put('/messages/:id/read', async (ctx) => {
+        if (!ctx.state.user) return ctx.error('Not authenticated', 401);
+
+        const message = await db.table('messages').find(ctx.params.id);
+        if (!message) return ctx.error('Message not found', 404);
+        if (message.recipient_id !== ctx.state.user.id) {
+            return ctx.error('Not authorized', 403);
+        }
+
+        await db.table('messages').where({ id: ctx.params.id }).update({ is_read: true });
+        ctx.success(null, 'Message marked as read');
+    });
+
+    // ============ PARTNERS ============
+    router.get('/partners', async (ctx) => {
+        const partners = await db.table('partners')
+            .orderBy('created_at', 'DESC')
+            .get();
+        ctx.success(partners || []);
+    });
+
+    // ============ APPLICANTS ============
+    router.get('/applicants', async (ctx) => {
+        const applicants = await db.table('applicants')
+            .orderBy('created_at', 'DESC')
+            .get();
+        ctx.success(applicants || []);
+    });
 };
