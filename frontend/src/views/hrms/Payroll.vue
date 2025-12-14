@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import Card from '@/components/ui/Card.vue';
 import Button from '@/components/ui/Button.vue';
-import { DollarSign, Download, Calendar } from 'lucide-vue-next';
+import { DollarSign, Download, Calendar, Loader2 } from 'lucide-vue-next';
+import api from '@/lib/api';
 
 interface PayrollRecord {
     id: number;
@@ -14,12 +15,40 @@ interface PayrollRecord {
     datePaid: string | null;
 }
 
-const payrolls = ref<PayrollRecord[]>([
-    { id: 1, employee: 'John Doe', position: 'Security Guard', period: 'Oct 1-15, 2023', amount: 1200, status: 'Paid', datePaid: 'Oct 16, 2023' },
-    { id: 2, employee: 'Jane Smith', position: 'Supervisor', period: 'Oct 1-15, 2023', amount: 1500, status: 'Paid', datePaid: 'Oct 16, 2023' },
-    { id: 3, employee: 'Mike Johnson', position: 'Security Guard', period: 'Oct 1-15, 2023', amount: 1200, status: 'Processing', datePaid: null },
-    { id: 4, employee: 'Sarah Williams', position: 'HR Assistant', period: 'Oct 1-15, 2023', amount: 1100, status: 'Pending', datePaid: null },
-]);
+const payrolls = ref<PayrollRecord[]>([]);
+const loading = ref(true);
+
+const fetchPayroll = async () => {
+    loading.value = true;
+    try {
+        const response = await api.get('/payroll');
+        const data = response.data.data || [];
+        payrolls.value = data.map((r: any) => ({
+            id: r.employee_id,
+            employee: `${r.first_name} ${r.last_name}`,
+            position: r.position || 'Employee',
+            period: 'Current Period',
+            amount: (r.total_hours || 0) * 15, // Placeholder rate
+            status: 'Pending',
+            datePaid: null
+        }));
+    } catch (error) {
+        console.error('Failed to fetch payroll:', error);
+        payrolls.value = [];
+    } finally {
+        loading.value = false;
+    }
+};
+
+onMounted(fetchPayroll);
+
+// Computed stats
+const totalPayroll = computed(() => payrolls.value.reduce((sum, p) => sum + p.amount, 0));
+const pendingPayroll = computed(() => payrolls.value.filter(p => p.status !== 'Paid').reduce((sum, p) => sum + p.amount, 0));
+const processedPercent = computed(() => {
+    if (payrolls.value.length === 0) return 0;
+    return Math.round((payrolls.value.filter(p => p.status === 'Paid').length / payrolls.value.length) * 100);
+});
 
 const getStatusClass = (status: string) => {
     switch (status) {
@@ -57,15 +86,15 @@ const formatCurrency = (val: number) => {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card class-name="p-5">
                  <p class="text-sm text-gray-500">Total Payroll Cost</p>
-                 <p class="text-2xl font-bold text-white mt-1">$5,000.00</p>
+                 <p class="text-2xl font-bold text-white mt-1">{{ formatCurrency(totalPayroll) }}</p>
             </Card>
             <Card class-name="p-5">
                  <p class="text-sm text-gray-500">Pending Payments</p>
-                 <p class="text-2xl font-bold text-yellow-500 mt-1">$2,300.00</p>
+                 <p class="text-2xl font-bold text-yellow-500 mt-1">{{ formatCurrency(pendingPayroll) }}</p>
             </Card>
             <Card class-name="p-5">
                  <p class="text-sm text-gray-500">Processed</p>
-                 <p class="text-2xl font-bold text-green-500 mt-1">50%</p>
+                 <p class="text-2xl font-bold text-green-500 mt-1">{{ processedPercent }}%</p>
             </Card>
         </div>
 

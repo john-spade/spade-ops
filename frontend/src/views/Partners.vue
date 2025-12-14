@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import Card from '@/components/ui/Card.vue';
 import Button from '@/components/ui/Button.vue';
-import { Plus, Users2, Phone, Mail } from 'lucide-vue-next';
+import { Plus, Users2, Phone, Mail, Loader2 } from 'lucide-vue-next';
+import api from '@/lib/api';
 
 interface Partner {
     id: number;
@@ -14,11 +15,23 @@ interface Partner {
     status: 'Active' | 'Inactive';
 }
 
-const partners = ref<Partner[]>([
-    { id: 1, name: 'Security Gear Suppliers Ltd', type: 'Supplier', contactPerson: 'Alice Cooper', email: 'alice@gear.com', phone: '+1 234 567 890', status: 'Active' },
-    { id: 2, name: 'Tech Solutions Inc', type: 'IT Vendor', contactPerson: 'Bob Ross', email: 'bob@tech.com', phone: '+1 987 654 321', status: 'Active' },
-    { id: 3, name: 'City Law Firm', type: 'Legal', contactPerson: 'Charlie Day', email: 'charlie@law.com', phone: '+1 555 555 555', status: 'Active' },
-]);
+const partners = ref<Partner[]>([]);
+const loading = ref(true);
+
+const fetchPartners = async () => {
+    loading.value = true;
+    try {
+        const response = await api.get('/partners');
+        partners.value = response.data.data || [];
+    } catch (error) {
+        console.error('Failed to fetch partners:', error);
+        partners.value = [];
+    } finally {
+        loading.value = false;
+    }
+};
+
+onMounted(fetchPartners);
 
 const getStatusClass = (status: string) => {
     return status === 'Active' 

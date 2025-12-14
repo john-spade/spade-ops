@@ -5,6 +5,7 @@ import Card from '@/components/ui/Card.vue';
 import Button from '@/components/ui/Button.vue';
 import { Plus, Loader2 } from 'lucide-vue-next';
 import api from '@/lib/api';
+import { useAuthStore } from '@/stores/auth';
 
 interface Evaluation {
     id: number;
@@ -15,8 +16,12 @@ interface Evaluation {
     evaluation_date: string;
 }
 
+const authStore = useAuthStore();
 const evaluations = ref<Evaluation[]>([]);
 const loading = ref(true);
+
+// Only supervisors can add evaluations
+const canAddEvaluation = authStore.user?.role === 'supervisor';
 
 const fetchEvaluations = async () => {
     loading.value = true;
@@ -40,7 +45,7 @@ onMounted(fetchEvaluations);
                 <h1 class="text-2xl font-bold text-white">Evaluation History</h1>
                 <p class="text-gray-500">View all guard performance evaluations</p>
             </div>
-            <RouterLink to="/evaluation/new">
+            <RouterLink v-if="canAddEvaluation" to="/evaluation/new">
                 <Button>
                     <Plus class="w-4 h-4" /> New Evaluation
                 </Button>

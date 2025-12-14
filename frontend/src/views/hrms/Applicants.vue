@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import Card from '@/components/ui/Card.vue';
 import Button from '@/components/ui/Button.vue';
-import { UserPlus, FileText, CheckCircle } from 'lucide-vue-next';
+import { UserPlus, FileText, CheckCircle, Loader2 } from 'lucide-vue-next';
+import api from '@/lib/api';
 
 interface Applicant {
     id: number;
@@ -13,11 +14,23 @@ interface Applicant {
     email: string;
 }
 
-const applicants = ref<Applicant[]>([
-    { id: 1, name: 'David Wilson', position: 'Security Officer', appliedDate: 'Oct 25, 2023', status: 'New', email: 'david@example.com' },
-    { id: 2, name: 'Emily Davis', position: 'HR Manager', appliedDate: 'Oct 24, 2023', status: 'Interview', email: 'emily@example.com' },
-    { id: 3, name: 'James Miller', position: 'Guard', appliedDate: 'Oct 20, 2023', status: 'Rejected', email: 'james@example.com' },
-]);
+const applicants = ref<Applicant[]>([]);
+const loading = ref(true);
+
+const fetchApplicants = async () => {
+    loading.value = true;
+    try {
+        const response = await api.get('/applicants');
+        applicants.value = response.data.data || [];
+    } catch (error) {
+        console.error('Failed to fetch applicants:', error);
+        applicants.value = [];
+    } finally {
+        loading.value = false;
+    }
+};
+
+onMounted(fetchApplicants);
 
 const getStatusClass = (status: string) => {
     switch (status) {
