@@ -137,7 +137,6 @@ onMounted(async () => {
             chartData.datasets[1].data = chart.clientsData;
             chartData.datasets[2].data = chart.sitesData;
         }
-        }
     } catch (error) {
         console.error('Error fetching dashboard data:', error);
     }
@@ -287,7 +286,6 @@ onMounted(async () => {
             <div class="h-[300px] w-full">
                 <Line :data="chartData" :options="chartOptions" />
             </div>
-        </Card>
         </Card>
     </div>
 </template>

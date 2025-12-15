@@ -81,7 +81,7 @@ const getStatusClass = (status: string) => {
                                 </div>
                             </td>
                             <td class="p-4 text-gray-400">{{ partner.type }}</td>
-                            <td class="p-4 text-white">{{ partner.contact_person || partner.contactPerson }}</td>
+                            <td class="p-4 text-white">{{ partner.contact_person }}</td>
                             <td class="p-4 text-gray-400">
                                 <div class="flex flex-col text-xs">
                                     <span class="flex items-center gap-1"><Mail class="w-3 h-3" /> {{ partner.email }}</span>

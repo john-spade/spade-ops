@@ -4,6 +4,7 @@ import Card from '@/components/ui/Card.vue';
 import Button from '@/components/ui/Button.vue';
 import { DollarSign, Download, Calendar, Loader2 } from 'lucide-vue-next';
 import api from '@/lib/api';
+import { useAuthStore } from '@/stores/auth';
 
 interface PayrollRecord {
     id: number;
@@ -15,6 +16,7 @@ interface PayrollRecord {
     datePaid: string | null;
 }
 
+const authStore = useAuthStore();
 const payrolls = ref<PayrollRecord[]>([]);
 const loading = ref(true);
 
@@ -84,14 +86,14 @@ const payrollPeriod = (() => {
                     <Calendar class="w-4 h-4" />
                     {{ payrollPeriod }}
                 </Button>
-                <Button variant="primary" class="gap-2">
+                <Button v-if="authStore.user?.role === 'admin'" variant="primary" class="gap-2">
                     <DollarSign class="w-4 h-4" />
                     Run Payroll
                 </Button>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div v-if="authStore.user?.role === 'admin'" class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card class-name="p-5">
                  <p class="text-sm text-gray-500">Total Payroll Cost</p>
                  <p class="text-2xl font-bold text-white mt-1">{{ formatCurrency(totalPayroll) }}</p>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { Clock, MapPin, Bell, MessageSquare, Calendar } from 'lucide-vue-next';
+import { Clock, MapPin, Bell, MessageSquare, Calendar, Star } from 'lucide-vue-next';
 import Card from '@/components/ui/Card.vue';
 import Button from '@/components/ui/Button.vue';
 import api from '@/lib/api';
@@ -14,12 +14,14 @@ interface GuardStats {
     } | null;
     unreadMessages: number;
     unreadNotifications: number;
+    announcements: any[];
 }
 
 const stats = ref<GuardStats>({
     nextShift: null,
     unreadMessages: 0,
-    unreadNotifications: 0
+    unreadNotifications: 0,
+    announcements: []
 });
 const loading = ref(true);
 
@@ -35,8 +37,14 @@ const formatDate = (dateStr: string) => {
 
 onMounted(async () => {
     try {
-        const response = await api.get('/dashboard/employee-stats');
-        stats.value = response.data.data;
+        const [statsRes, annRes] = await Promise.all([
+            api.get('/dashboard/employee-stats'),
+            api.get('/announcements')
+        ]);
+        stats.value = { 
+            ...statsRes.data.data, 
+            announcements: annRes.data.data || [] 
+        };
     } catch (error) {
         console.error('Failed to fetch guard stats:', error);
     } finally {
@@ -111,10 +119,27 @@ onMounted(async () => {
         </div>
 
         <!-- Placeholder for other modules later -->
-        <div class="grid grid-cols-1 gap-6">
-            <Card class-name="p-8 text-center border-dashed border-2 border-white/10 bg-transparent">
-                <p class="text-gray-500">More employee features coming soon...</p>
-            </Card>
-        </div>
+        <!-- Announcements Section -->
+        <Card class-name="p-6">
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <Bell class="w-5 h-5 text-gold-500" />
+                Latest Announcements
+            </h3>
+            <div v-if="stats.announcements && stats.announcements.length > 0" class="space-y-4">
+                <div v-for="ann in stats.announcements" :key="ann.id" class="p-4 bg-dark-900 rounded-lg border border-white/5">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="text-white font-medium">{{ ann.title }}</h4>
+                        <span :class="['text-xs px-2 py-1 rounded', ann.priority === 'high' ? 'bg-red-500/20 text-red-500' : 'bg-blue-500/20 text-blue-500']">
+                            {{ ann.priority || 'Normal' }}
+                        </span>
+                    </div>
+                    <p class="text-gray-400 text-sm">{{ ann.content }}</p>
+                    <p class="text-gray-600 text-xs mt-2">{{ new Date(ann.created_at).toLocaleDateString() }}</p>
+                </div>
+            </div>
+            <div v-else class="text-center py-8 text-gray-500">
+                No new announcements.
+            </div>
+        </Card>
     </div>
 </template>
