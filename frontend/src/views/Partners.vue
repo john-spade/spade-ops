@@ -5,18 +5,21 @@ import Button from '@/components/ui/Button.vue';
 import { Plus, Users2, Phone, Mail, Loader2 } from 'lucide-vue-next';
 import api from '@/lib/api';
 
+import CreatePartnerModal from '@/components/modals/CreatePartnerModal.vue';
+
 interface Partner {
     id: number;
     name: string;
     type: string;
-    contactPerson: string;
+    contact_person: string;
     email: string;
     phone: string;
-    status: 'Active' | 'Inactive';
+    status: 'Active' | 'Inactive'; // Note: Backend returns 'active'/'inactive' (lowercase), frontend might expect Title Case. Will handle in getStatusClass or API.
 }
 
 const partners = ref<Partner[]>([]);
 const loading = ref(true);
+const showModal = ref(false);
 
 const fetchPartners = async () => {
     loading.value = true;
@@ -34,7 +37,8 @@ const fetchPartners = async () => {
 onMounted(fetchPartners);
 
 const getStatusClass = (status: string) => {
-    return status === 'Active' 
+    // Handle both 'active' and 'Active'
+    return status?.toLowerCase() === 'active'
         ? 'bg-green-500/10 text-green-500 border-green-500/20' 
         : 'bg-red-500/10 text-red-500 border-red-500/20';
 };
@@ -47,11 +51,13 @@ const getStatusClass = (status: string) => {
                 <h1 class="text-2xl font-bold text-white">Partners</h1>
                 <p class="text-gray-500">Manage external vendors and partners</p>
             </div>
-            <Button variant="primary" class="gap-2">
+            <Button @click="showModal = true" variant="primary" class="gap-2">
                 <Plus class="w-4 h-4" />
                 Add Partner
             </Button>
         </div>
+        
+        <CreatePartnerModal :is-open="showModal" @close="showModal = false" @refresh="fetchPartners" />
 
         <Card class-name="overflow-hidden">
             <div class="overflow-x-auto">
@@ -75,7 +81,7 @@ const getStatusClass = (status: string) => {
                                 </div>
                             </td>
                             <td class="p-4 text-gray-400">{{ partner.type }}</td>
-                            <td class="p-4 text-white">{{ partner.contactPerson }}</td>
+                            <td class="p-4 text-white">{{ partner.contact_person || partner.contactPerson }}</td>
                             <td class="p-4 text-gray-400">
                                 <div class="flex flex-col text-xs">
                                     <span class="flex items-center gap-1"><Mail class="w-3 h-3" /> {{ partner.email }}</span>

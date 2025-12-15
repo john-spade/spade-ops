@@ -27,15 +27,15 @@ const fetchAttendance = async () => {
     attendanceLoading.value = true;
     try {
         const response = await api.get('/attendance');
-        const data = response.data.data; // Handling paginated response
+        const data = response.data.data;
         attendanceData.value = data.map((r: any) => ({
             id: r.id,
             employee: r.employee ? `${r.employee.first_name} ${r.employee.last_name}` : 'Unknown',
             date: r.date,
-            checkIn: formatTime(r.clock_in),
-            checkOut: formatTime(r.clock_out),
-            status: r.status.charAt(0).toUpperCase() + r.status.slice(1),
-            location: 'Main HQ' // Placeholder as location is not in attendance table yet
+            checkIn: formatTime(r.clock_in), // formatTime handles null
+            checkOut: formatTime(r.clock_out), // formatTime handles null
+            status: (r.status || 'absent').charAt(0).toUpperCase() + (r.status || 'absent').slice(1),
+            location: r.location || 'Main HQ'
         }));
     } catch (error) {
         console.error('Failed to fetch attendance:', error);

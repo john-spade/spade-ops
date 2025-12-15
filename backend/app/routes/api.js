@@ -561,7 +561,59 @@ export default (router) => {
         ctx.success(partners || []);
     });
 
-    // ============ APPLICANTS ============
+    router.post('/partners', async (ctx) => {
+        const { name, type, contact_person, email, phone, services, status } = ctx.body;
+        if (!name) return ctx.error('Partner name is required', 400);
+
+        const id = await db.insert('partners', {
+            name,
+            type: type || 'Vendor',
+            contact_person,
+            email,
+            phone,
+            services,
+            status: status || 'active'
+        });
+
+        const newPartner = await db.table('partners').find(id);
+        ctx.success(newPartner, 'Partner added', 201);
+    });
+
+    // ============ ATTENDANCE ============
+    router.get('/attendance', async (ctx) => {
+        const { date } = ctx.query;
+        const targetDate = date || new Date().toISOString().split('T')[0];
+
+        // Get all active employees and join with attendance for the specific date
+        // IFNULL logic maps the attendance status, defaulting to 'Absent' if no record found
+        const attendance = await db.raw(`
+            SELECT 
+                e.id, 
+                e.first_name, 
+                e.last_name, 
+                a.id as attendance_id,
+                a.clock_in,
+                a.clock_out,
+                a.status as attendance_status,
+                e.position
+            FROM employees e
+            LEFT JOIN attendances a ON e.id = a.employee_id AND a.date = ?
+            WHERE e.status = 'active'
+            ORDER BY e.first_name ASC
+        `, [targetDate]);
+
+        const mapped = attendance.map(r => ({
+            id: r.id, // Using employee ID as the row key if attendance ID is null
+            employee: { id: r.id, first_name: r.first_name, last_name: r.last_name },
+            date: targetDate,
+            clock_in: r.clock_in,
+            clock_out: r.clock_out,
+            status: r.attendance_status || 'absent', // Default to absent
+            location: 'Main HQ'
+        }));
+
+        ctx.success(mapped);
+    });
     const applicants = await db.table('applicants')
         .orderBy('applied_at', 'DESC')
         .get();
