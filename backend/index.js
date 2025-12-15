@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { Callie, db, cors, secureHeaders } from './src/index.js';
+import { Callie, db, cors, secureHeaders, auth, optionalAuth } from './src/index.js';
 import apiRoutes from './app/routes/api.js';
 import authRoutes from './app/routes/auth.js';
 
@@ -15,8 +15,14 @@ app.use(cors({
 app.use(secureHeaders());
 
 // Routes
-app.group('/api', apiRoutes);
-app.group('/auth', authRoutes);
+// Routes
+// Mount auth routes at /api so /api/login works
+// Use optionalAuth so /api/me works if token exists
+app.group('/api', optionalAuth(), authRoutes);
+
+// Mount API routes at /api
+// Use auth() to protect all these routes
+app.group('/api', auth(), apiRoutes);
 
 // Health check
 app.get('/', (ctx) => {

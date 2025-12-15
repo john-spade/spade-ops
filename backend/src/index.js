@@ -15,7 +15,7 @@ export { db, createConnection } from './database/index.js';
 export { QueryBuilder } from './database/query-builder.js';
 
 // Auth exports
-export { auth, hashPassword, verifyPassword, generateToken, verifyToken } from './auth/index.js';
+export { auth, hashPassword, verifyPassword, generateToken, verifyToken, optionalAuth } from './auth/index.js';
 
 // Middleware exports
 export { cors } from './middleware/cors.js';
