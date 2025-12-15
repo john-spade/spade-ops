@@ -102,31 +102,23 @@ export default (router) => {
             return ctx.error('Name and Email are required', 400);
         }
 
+        let user_id = null;
+
         // Check if email already exists
         const existingUser = await db.table('users').where({ email }).first();
         if (existingUser) {
-            return ctx.error('Email already exists', 400);
-        }
-
-        // Check if employee_id already exists
-        if (employee_id) {
-            const existingEmpId = await db.table('employees').where({ employee_id }).first();
-            if (existingEmpId) {
-                return ctx.error('Employee ID already exists', 400);
+            user_id = existingUser.id;
+        } else {
+            // Create user account if password provided
+            if (password) {
+                const hashedPassword = await hashPassword(password);
+                user_id = await db.insert('users', {
+                    name: `${first_name} ${last_name}`,
+                    email,
+                    password: hashedPassword,
+                    role: 'employee'
+                });
             }
-        }
-
-        let user_id = null;
-
-        // Create user account if password provided
-        if (password) {
-            const hashedPassword = await hashPassword(password);
-            user_id = await db.insert('users', {
-                name: `${first_name} ${last_name}`,
-                email,
-                password: hashedPassword,
-                role: 'employee'
-            });
         }
 
         const id = await db.insert('employees', {
