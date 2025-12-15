@@ -686,9 +686,10 @@ router.get('/attendance', async (ctx) => {
 
     ctx.success(mapped);
 });
-const applicants = await db.table('applicants')
-    .orderBy('applied_at', 'DESC')
-    .get();
-ctx.success(applicants || []);
+router.get('/applicants', async (ctx) => {
+    const applicants = await db.table('applicants')
+        .orderBy('applied_at', 'DESC')
+        .get();
+    ctx.success(applicants || []);
 });
 };
