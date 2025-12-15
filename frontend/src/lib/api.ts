@@ -1,7 +1,7 @@
 import axios, { type InternalAxiosRequestConfig, type AxiosResponse, AxiosError } from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'https://api.spadesecurityservices.com/api',
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'https://spade-ops-api.onrender.com/api',
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
