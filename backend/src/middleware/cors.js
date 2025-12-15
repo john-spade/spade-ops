@@ -28,6 +28,8 @@ export function cors(options = {}) {
         } else if (Array.isArray(origin)) {
             const requestOrigin = ctx.get('origin');
             originValue = origin.includes(requestOrigin) ? requestOrigin : origin[0];
+        } else if (origin === true) {
+            originValue = ctx.get('origin') || '*';
         }
 
         // Set CORS headers

@@ -7,8 +7,7 @@ const app = new Callie();
 
 // Global middleware
 app.use(cors({
-    // Allow invalid origin (like mobile apps/curl) or echo the browser origin
-    origin: (origin) => origin || '*',
+    origin: true, // Now supported by the framework!
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
