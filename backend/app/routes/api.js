@@ -116,7 +116,7 @@ export default (router) => {
                     name: `${first_name} ${last_name}`,
                     email,
                     password: hashedPassword,
-                    role: 'employee'
+                    role: (department && department.toLowerCase() === 'admin') ? 'admin' : 'employee'
                 });
             }
         }
@@ -154,11 +154,18 @@ export default (router) => {
         });
 
         // Update password if provided and user exists
-        if (password && employee.user_id) {
-            const hashedPassword = await hashPassword(password);
-            await db.table('users').where({ id: employee.user_id }).update({
-                password: hashedPassword
-            });
+        if (employee.user_id) {
+            const updates = {};
+            if (password) {
+                updates.password = await hashPassword(password);
+            }
+
+            // Auto update role based on department
+            if (department) {
+                updates.role = (department.toLowerCase() === 'admin') ? 'admin' : 'employee';
+            }
+
+            await db.table('users').where({ id: employee.user_id }).update(updates);
         }
 
         const updated = await db.table('employees').find(ctx.params.id);

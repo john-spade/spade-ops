@@ -6,6 +6,7 @@ import api from '@/lib/api';
 
 const props = defineProps<{
     isOpen: boolean;
+    employee?: any;
 }>();
 
 const emit = defineEmits(['close', 'refresh']);
@@ -24,13 +25,25 @@ const form = ref({
     date_hired: new Date().toISOString().split('T')[0]
 });
 
-const handleSubmit = async () => {
-    loading.value = true;
-    try {
-        await api.post('/employees', form.value);
-        emit('refresh');
-        emit('close');
-        // Reset form
+// Watch for changes in isOpen to populate form when editing
+import { watch, computed } from 'vue';
+
+watch(() => props.isOpen, (start) => {
+    if (start && props.employee) {
+        form.value = {
+            first_name: props.employee.first_name || '',
+            last_name: props.employee.last_name || '',
+            employee_id: props.employee.employee_id || '',
+            email: props.employee.email || '',
+            password: '', // Leave blank unless changing
+            phone: props.employee.phone || '',
+            position: props.employee.position || '',
+            department: props.employee.department || '',
+            status: props.employee.status || 'active',
+            date_hired: props.employee.date_hired ? new Date(props.employee.date_hired).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+        };
+    } else if (start && !props.employee) {
+        // Reset if creating new
         form.value = {
             first_name: '',
             last_name: '',
@@ -43,9 +56,25 @@ const handleSubmit = async () => {
             status: 'active',
             date_hired: new Date().toISOString().split('T')[0]
         };
+    }
+});
+
+const isEdit = computed(() => !!props.employee);
+
+const handleSubmit = async () => {
+    loading.value = true;
+    try {
+        if (isEdit.value) {
+            await api.put(`/employees/${props.employee.id}`, form.value);
+        } else {
+            await api.post('/employees', form.value);
+        }
+        
+        emit('refresh');
+        emit('close');
     } catch (error) {
-        console.error('Failed to create employee:', error);
-        alert('Failed to create employee. Please check the fields.');
+        console.error('Failed to save employee:', error);
+        alert('Failed to save employee. Please check the fields.');
     } finally {
         loading.value = false;
     }
@@ -57,7 +86,7 @@ const handleSubmit = async () => {
         <div class="bg-dark-800 border border-white/10 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
             <!-- Header -->
             <div class="flex justify-between items-center p-6 border-b border-white/10">
-                <h2 class="text-xl font-bold text-white">Add New Employee</h2>
+                <h2 class="text-xl font-bold text-white">{{ isEdit ? 'Edit Employee' : 'Add New Employee' }}</h2>
                 <button @click="$emit('close')" class="text-gray-400 hover:text-white">
                     <X class="w-5 h-5" />
                 </button>

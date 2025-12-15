@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import Card from '@/components/ui/Card.vue';
 import Button from '@/components/ui/Button.vue';
-import { Plus, Search, Trash2, Eye, Loader2 } from 'lucide-vue-next';
+import { Plus, Search, Trash2, Eye, Loader2, Pencil } from 'lucide-vue-next';
 import api from '@/lib/api';
 import CreateEmployeeModal from '@/components/modals/CreateEmployeeModal.vue';
 
@@ -15,6 +15,9 @@ interface Employee {
     department: string;
     status: string;
     date_hired: string;
+    email?: string;
+    phone?: string;
+    employee_id?: string;
 }
 
 const router = useRouter();
@@ -22,6 +25,7 @@ const employees = ref<Employee[]>([]);
 const loading = ref(true);
 const search = ref('');
 const showModal = ref(false);
+const selectedEmployee = ref<Employee | null>(null);
 
 const fetchEmployees = async () => {
     loading.value = true;
@@ -33,6 +37,16 @@ const fetchEmployees = async () => {
     } finally {
         loading.value = false;
     }
+};
+
+const openCreateModal = () => {
+    selectedEmployee.value = null;
+    showModal.value = true;
+};
+
+const openEditModal = (employee: Employee) => {
+    selectedEmployee.value = employee;
+    showModal.value = true;
 };
 
 const deleteEmployee = async (id: number) => {
@@ -68,13 +82,18 @@ onMounted(fetchEmployees);
                 <h1 class="text-2xl font-bold text-white">Employees</h1>
                 <p class="text-gray-500">Manage your workforce</p>
             </div>
-            <Button @click="showModal = true">
+            <Button @click="openCreateModal">
                 <Plus class="w-4 h-4" /> Add Employee
             </Button>
         </div>
 
         <!-- Create Modal -->
-        <CreateEmployeeModal :is-open="showModal" @close="showModal = false" @refresh="fetchEmployees" />
+        <CreateEmployeeModal 
+            :is-open="showModal" 
+            :employee="selectedEmployee"
+            @close="showModal = false" 
+            @refresh="fetchEmployees" 
+        />
 
         <!-- Search -->
         <Card class-name="p-4">
@@ -123,11 +142,14 @@ onMounted(fetchEmployees);
                         </td>
                         <td class="px-6 py-4 text-right" @click.stop>
                             <div class="flex justify-end gap-2">
-                                <RouterLink :to="`/employees/${emp.id}`">
-                                    <button class="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white">
-                                        <Eye class="w-4 h-4" />
+                                    <button @click.stop="openEditModal(emp)" class="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white">
+                                        <Pencil class="w-4 h-4" />
                                     </button>
-                                </RouterLink>
+                                    <RouterLink :to="`/employees/${emp.id}`">
+                                        <button class="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white">
+                                            <Eye class="w-4 h-4" />
+                                        </button>
+                                    </RouterLink>
                                 <button @click="deleteEmployee(emp.id)" class="p-2 hover:bg-red-500/10 rounded-lg text-gray-400 hover:text-red-400">
                                     <Trash2 class="w-4 h-4" />
                                 </button>
