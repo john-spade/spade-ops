@@ -28,18 +28,7 @@ export const useAuthStore = defineStore('auth', () => {
     };
 
     const login = async (username: string, password: string): Promise<{ success: boolean; error?: string; redirect?: string }> => {
-        if (username === 'admin' && password === '1234') {
-            const userData: User = {
-                id: '1',
-                username: 'admin',
-                name: 'Admin User',
-                email: 'admin@spadesecurity.com',
-                role: 'admin',
-            };
-            user.value = userData;
-            sessionStorage.setItem('user', JSON.stringify(userData));
-            return { success: true, redirect: '/dashboard' };
-        }
+
 
         try {
             const response = await api.post('/login', { identifier: username, password });
