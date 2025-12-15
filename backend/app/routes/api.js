@@ -555,10 +555,9 @@ export default (router) => {
     });
 
     // ============ APPLICANTS ============
-    router.get('/applicants', async (ctx) => {
-        const applicants = await db.table('applicants')
-            .orderBy('created_at', 'DESC')
-            .get();
-        ctx.success(applicants || []);
-    });
+    const applicants = await db.table('applicants')
+        .orderBy('applied_at', 'DESC')
+        .get();
+    ctx.success(applicants || []);
+});
 };
