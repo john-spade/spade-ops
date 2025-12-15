@@ -7,12 +7,10 @@ const app = new Callie();
 
 // Global middleware
 app.use(cors({
-    origin: [
-        'https://admin.spadesecurityservices.com',
-        'http://localhost:5173',
-        'http://localhost:3000'
-    ],
-    credentials: true
+    origin: true, // Allow all origins temporarily to fix the issue
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 app.use(secureHeaders());
 
