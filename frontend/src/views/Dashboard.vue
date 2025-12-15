@@ -6,6 +6,10 @@ import { Users, ClipboardCheck, Building2, AlertTriangle, Bell, Trophy, ArrowRig
 import { Line } from 'vue-chartjs';
 import 'chart.js/auto';
 import api from '@/lib/api';
+import { useAuthStore } from '@/stores/auth';
+import GuardDashboard from '@/views/GuardDashboard.vue';
+
+const authStore = useAuthStore();
 
 interface DashboardStats {
     totalEmployees: number;
@@ -133,6 +137,7 @@ onMounted(async () => {
             chartData.datasets[1].data = chart.clientsData;
             chartData.datasets[2].data = chart.sitesData;
         }
+        }
     } catch (error) {
         console.error('Error fetching dashboard data:', error);
     }
@@ -140,7 +145,9 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="space-y-6">
+    <GuardDashboard v-if="authStore.user?.role === 'employee'" />
+    
+    <div v-else class="space-y-6">
         <div>
             <h1 class="text-2xl font-bold text-white">Dashboard</h1>
             <p class="text-gray-500">Welcome back! Here's what's happening today.</p>
@@ -280,6 +287,7 @@ onMounted(async () => {
             <div class="h-[300px] w-full">
                 <Line :data="chartData" :options="chartOptions" />
             </div>
+        </Card>
         </Card>
     </div>
 </template>
